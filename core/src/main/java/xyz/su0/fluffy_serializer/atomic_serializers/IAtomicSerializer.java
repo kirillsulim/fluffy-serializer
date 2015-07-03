@@ -8,6 +8,8 @@ package xyz.su0.fluffy_serializer.atomic_serializers;
  *
  */
 public interface IAtomicSerializer<T> {
+  // TODO: Add parse exceptions
+
   /**
    *
    */
