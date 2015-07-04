@@ -18,13 +18,11 @@ class DemoClass {
 public class ReferenceSerializerTest {
   ReferenceSerializer sz;
 
-  @Before
-  public void setUp() {
-    sz = new ReferenceSerializer();
-  }
-
   @Test
   public void shouldSerializeObjectsIntoReferences() {
+    List<Object> elements = new ArrayList<Object>();
+    ReferenceSerializer sz = new ReferenceSerializer(elements);
+
     DemoClass first = new DemoClass();
     DemoClass second = new DemoClass();
 
@@ -32,9 +30,9 @@ public class ReferenceSerializerTest {
     String strSecond = sz.serialize(second);
     String strThird = sz.serialize(first);
 
-    assertEquals("&0", strFirst);
-    assertEquals("&1", strSecond);
-    assertEquals("&0", strThird);
+    assertEquals("\"&0\"", strFirst);
+    assertEquals("\"&1\"", strSecond);
+    assertEquals("\"&0\"", strThird);
   }
 
   @Test
@@ -48,11 +46,11 @@ public class ReferenceSerializerTest {
     elements.add(second);
     elements.add(third);
 
-    sz.setElements(elements);
+    ReferenceSerializer sz = new ReferenceSerializer(elements);
 
-    Object firstDeserialized = sz.deserialize("&0");
-    Object secondDeserialized = sz.deserialize("&1");
-    Object thirdDeserialized = sz.deserialize("&2");
+    Object firstDeserialized = sz.deserialize("\"&0\"");
+    Object secondDeserialized = sz.deserialize("\"&1\"");
+    Object thirdDeserialized = sz.deserialize("\"&2\"");
 
     assertEquals(first, firstDeserialized);
     assertEquals(second, secondDeserialized);

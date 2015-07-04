@@ -12,8 +12,8 @@ import java.util.regex.Matcher;
 public class ReferenceSerializer implements IAtomicSerializer {
   private List<Object> elements;
 
-  public ReferenceSerializer() {
-    elements = new ArrayList<Object>();
+  public ReferenceSerializer(List<Object> objectsArray) {
+    elements = objectsArray;
   }
 
   public void setElements(List<Object> elements) {
@@ -26,11 +26,11 @@ public class ReferenceSerializer implements IAtomicSerializer {
       elements.add(obj);
       i = elements.size() - 1;
     }
-    return String.format("&%d", i);
+    return String.format("\"&%d\"", i);
   }
 
   public Object deserialize(String input) {
-    Pattern pattern = Pattern.compile("&(\\d+)");
+    Pattern pattern = Pattern.compile("\"&(\\d+)\"");
     Matcher matcher = pattern.matcher(input);
 
     if(!matcher.matches()) {

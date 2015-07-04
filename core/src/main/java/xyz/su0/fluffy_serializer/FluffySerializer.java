@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.lang.Exception;
 
+
+
 import xyz.su0.fluffy_serializer.atomic_serializers.*;
 import xyz.su0.fluffy_serializer.annotations.*;
 
@@ -22,11 +24,29 @@ public class FluffySerializer {
     ignoredNames.add("this$0");
   }
 
-  private AtomicHolder atomics = new AtomicHolder();
-
   public String serialize(Object object) {
+    List<Object> objectsArray = new ArrayList<>();
+    List<String> serializedObjects = new ArrayList<>();
+    AtomicHolder atomics = new AtomicHolder(objectsArray);
 
+    objectsArray.add(object);
+    int currentObjectIndex = 0;
 
+    do {
+      Object currentObject = objectsArray.get(currentObjectIndex);
+      serializedObjects.add(serializeObject(currentObject, atomics));
+      ++currentObjectIndex;
+    } while(currentObjectIndex < objectsArray.size());
+
+    StringBuilder result = new StringBuilder();
+    result.append('[');
+    result.append(String.join(",", serializedObjects));
+    result.append(']');
+
+    return result.toString();
+  }
+
+  private String serializeObject(Object object, AtomicHolder atomics) {
     Class clazz = object.getClass();
 
     Field[] fields = clazz.getDeclaredFields();
@@ -76,6 +96,7 @@ public class FluffySerializer {
     result.append(String.join(",", kvPairs));
     result.append('}');
     return result.toString();
+
   }
 
   public Object deserialize(String string) {

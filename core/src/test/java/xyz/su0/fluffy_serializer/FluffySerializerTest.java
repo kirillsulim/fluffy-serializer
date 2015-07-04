@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 
 public class FluffySerializerTest {
   FluffySerializer sz;
-  
+
   @Before
   public void setUp() {
     sz = new FluffySerializer();
@@ -29,11 +29,10 @@ public class FluffySerializerTest {
 
     String result = sz.serialize(o);
 
-    assertEquals("{\"data1\":42,\"data2\":\"Hello World!\"}", result);
+    assertEquals("[{\"data1\":42,\"data2\":\"Hello World!\"}]", result);
   }
 
   @Test
-  @Ignore
   public void shouldSerializeLinked() {
     class DemoClass {
       public DemoClass ref;

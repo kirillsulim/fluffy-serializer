@@ -15,7 +15,7 @@ public class AtomicHolderTest {
 
   @Before
   public void setUp() {
-    hd = new AtomicHolder();
+    hd = new AtomicHolder(null);
   }
 
   @Test
