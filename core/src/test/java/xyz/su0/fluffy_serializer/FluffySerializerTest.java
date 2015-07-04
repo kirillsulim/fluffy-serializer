@@ -7,6 +7,16 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 
+class SimpleObject {
+  public int data1;
+  public String data2;
+}
+
+class DemoClass {
+  public DemoClass ref;
+  public String data1;
+  public int data2;
+}
 
 public class FluffySerializerTest {
   FluffySerializer sz;
@@ -18,28 +28,27 @@ public class FluffySerializerTest {
 
   @Test
   public void shouldSerializeSimpleObject() {
-    class SimpleObject {
-      public int data1;
-      public String data2;
-    }
-
     SimpleObject o = new SimpleObject();
     o.data1 = 42;
     o.data2 = "Hello World!";
 
     String result = sz.serialize(o);
 
-    assertEquals("[{\"data1\":42,\"data2\":\"Hello World!\"}]", result);
+    assertEquals("[{\"@class\":\"xyz.su0.fluffy_serializer.SimpleObject\",\"data1\":42,\"data2\":\"Hello World!\"}]", result);
+  }
+
+  @Test
+  public void shouldDeserializeSimpleObject() {
+    String data = "[{\"@class\":\"xyz.su0.fluffy_serializer.SimpleObject\",\"data1\":42,\"data2\":\"Hello World!\"}]";
+
+    SimpleObject so = (SimpleObject) sz.deserialize(data);
+
+    assertEquals(42, so.data1);
+    assertEquals("Hello World!", so.data2);
   }
 
   @Test
   public void shouldSerializeLinked() {
-    class DemoClass {
-      public DemoClass ref;
-      public String data1;
-      public int data2;
-    }
-
     DemoClass o1 = new DemoClass();
     o1.data1 = "Hello";
     o1.data2 = 42;
@@ -54,7 +63,10 @@ public class FluffySerializerTest {
     String serializedString = sz.serialize(o1);
 
     assertEquals(
-      "[{\"ref\":\"&1\",\"data1\":\"Hello\",\"data2\":42},{\"ref\":\"&0\",\"data1\":\"World\",\"data2\":123}]",
+      "["
+        + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&1\",\"data1\":\"Hello\",\"data2\":42},"
+        + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&0\",\"data1\":\"World\",\"data2\":123}"
+        + "]",
       serializedString
     );
   }
