@@ -4,9 +4,9 @@
 
 package xyz.su0.fluffy_serializer.atomic_serializers;
 
-class IntegerSerializer implements IAtomicSerializer<Integer> {
-  public String serialize(Integer i) {
-    return i.toString();
+public class IntegerSerializer implements IAtomicSerializer {
+  public String serialize(Object i) {
+    return ((Integer)i).toString();
   }
 
   public Integer deserialize(String s) {

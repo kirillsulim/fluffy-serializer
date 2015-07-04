@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-class ReferenceSerializer implements IAtomicSerializer<Object> {
+public class ReferenceSerializer implements IAtomicSerializer {
   private List<Object> elements;
 
   public ReferenceSerializer() {

@@ -20,24 +20,24 @@ public class StringSerializerTest {
   @Test
   public void shouldSerializeSimpleString() {
     String serializedString = sz.serialize("This is simple string.");
-    assertEquals("This is simple string.", serializedString);
+    assertEquals("\"This is simple string.\"", serializedString);
   }
 
   @Test
   public void shouldDeserializeSimpleString() {
-    String deserializedString = sz.deserialize("This is simple string.");
+    String deserializedString = sz.deserialize("\"This is simple string.\"");
     assertEquals("This is simple string.", deserializedString);
   }
 
   @Test
   public void shouldSerializeStringContainingQuotes() {
     String serializedString = sz.serialize("String with some \"strange symbols\"");
-    assertEquals("String with some \\\"strange symbols\\\"", serializedString);
+    assertEquals("\"String with some \\\"strange symbols\\\"\"", serializedString);
   }
 
   @Test
   public void shouldDeserializeStringContainingQuotes() {
-    String deserializedString = sz.deserialize("String with some \\\"strange symbols\\\"");
+    String deserializedString = sz.deserialize("\"String with some \\\"strange symbols\\\"\"");
     assertEquals("String with some \"strange symbols\"", deserializedString);
   }
 }

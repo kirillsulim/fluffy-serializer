@@ -7,16 +7,16 @@ package xyz.su0.fluffy_serializer.atomic_serializers;
 /**
  *
  */
-public interface IAtomicSerializer<T> {
+public interface IAtomicSerializer {
   // TODO: Add parse exceptions
 
   /**
    *
    */
-  public abstract String serialize(T c);
+  public abstract String serialize(Object o);
 
   /**
    *
    */
-  public abstract T deserialize(String s);
+  public abstract Object deserialize(String s);
 }
