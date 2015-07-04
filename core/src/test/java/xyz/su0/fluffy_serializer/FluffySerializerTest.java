@@ -57,17 +57,45 @@ public class FluffySerializerTest {
     o2.data1 = "World";
     o2.data2 = 123;
 
+    DemoClass o3 = new DemoClass();
+    o3.data1 = "Today";
+    o3.data2 = 2015;
+
     o1.ref = o2;
-    o2.ref = o1;
+    o2.ref = o3;
+    o3.ref = o1;
 
     String serializedString = sz.serialize(o1);
 
     assertEquals(
       "["
         + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&1\",\"data1\":\"Hello\",\"data2\":42},"
-        + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&0\",\"data1\":\"World\",\"data2\":123}"
+        + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&2\",\"data1\":\"World\",\"data2\":123},"
+        + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&0\",\"data1\":\"Today\",\"data2\":2015}"
         + "]",
       serializedString
     );
+  }
+
+  @Test
+  public void shouldDeserializeLinked() {
+    String data = "["
+      + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&1\",\"data1\":\"Hello\",\"data2\":42},"
+      + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&2\",\"data1\":\"World\",\"data2\":123},"
+      + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&0\",\"data1\":\"Today\",\"data2\":2015}"
+      + "]";
+
+    DemoClass startPoint = (DemoClass)sz.deserialize(data);
+    assertEquals("Hello", startPoint.data1);
+    assertEquals(42, startPoint.data2);
+
+    DemoClass second = startPoint.ref;
+    assertEquals("World", second.data1);
+    assertEquals(123, second.data2);
+
+    DemoClass third = second.ref;
+    assertEquals("Today", third.data1);
+    assertEquals(2015, third.data2);
+    assertEquals(startPoint, third.ref);
   }
 }

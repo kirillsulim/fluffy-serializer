@@ -107,10 +107,12 @@ public class FluffySerializer {
     List<Object> objectsArray = new ArrayList<>();
     AtomicHolder atomics = new AtomicHolder(objectsArray);
 
-    for (String oString : objectsStrings) {
-      objectsArray.add(deserializeObject(oString, atomics));
+    for (String objString : objectsStrings) {
+      objectsArray.add(deserializeObject(objString, atomics));
     }
-    applyReferences(objectsStrings, objectsArray);
+    for (int i = 0; i < objectsArray.size(); ++i) {
+      applyReferences(i, objectsStrings[i], objectsArray, atomics);
+    }
 
     return objectsArray.get(0);
   }
@@ -131,7 +133,7 @@ public class FluffySerializer {
     Object object = null;
     Class objectClass = null;
     try {
-       objectClass = Class.forName(className);
+      objectClass = Class.forName(className);
       object = objectClass.newInstance();
     }
     catch(Exception e) {
@@ -140,6 +142,10 @@ public class FluffySerializer {
     }
 
     for(Map.Entry<String, String> entry : kv.entrySet()) {
+      if(entry.getValue().startsWith("&")) {
+        continue;
+      }
+
       Field currentField = null;
       try {
         currentField = objectClass.getField(entry.getKey());
@@ -163,7 +169,45 @@ public class FluffySerializer {
     return object;
   }
 
-  public void applyReferences(String[] objectsStrings, List<Object> objectsArray) {
+  public void applyReferences(int index, String objectString, List<Object> objectsArray, AtomicHolder atomics) {
+    String[] kvPairs = objectString.split(",");
 
+    Map<String, String> kv = new HashMap<>();
+    for(String pair : kvPairs) {
+      System.out.println(pair);
+      String[] t = pair.split(":");
+      kv.put(t[0].replaceAll("\"", ""), t[1]);
+    }
+    String className = kv.get("@class");
+    kv.remove("@class");
+
+    Object object = objectsArray.get(index);
+    Class objectClass = object.getClass();
+
+    for(Map.Entry<String, String> entry : kv.entrySet()) {
+      if(!entry.getValue().startsWith("\"&")) {
+        continue;
+      }
+
+      Field currentField = null;
+      try {
+        currentField = objectClass.getField(entry.getKey());
+      }
+      catch(Exception e) {
+        // TODO: fix
+        System.out.println(e.toString());
+      }
+      currentField.setAccessible(true);
+
+      IAtomicSerializer sz = atomics.getAtomicSerializerInstance(currentField.getType());
+      try {
+        currentField.set(object, sz.deserialize(entry.getValue()));
+        System.out.println("Stted " + entry.getValue() + " = " + currentField.get(object));
+      }
+      catch(Exception e) {
+        // TODO: fix
+        System.out.println(e.toString());
+      }
+    }
   }
 }
