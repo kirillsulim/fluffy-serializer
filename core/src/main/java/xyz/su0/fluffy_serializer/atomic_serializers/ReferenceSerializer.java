@@ -34,6 +34,7 @@ public class ReferenceSerializer implements IAtomicSerializer {
     Matcher matcher = pattern.matcher(input);
 
     if(!matcher.matches()) {
+      System.out.println("Mismatch!");
       return null;
     }
 
