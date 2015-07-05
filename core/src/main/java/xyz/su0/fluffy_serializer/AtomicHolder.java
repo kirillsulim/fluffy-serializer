@@ -46,6 +46,7 @@ class AtomicHolder {
 
   public IAtomicSerializer getAtomicSerializerInstance(Class clazz)
     /*throws
+    TODO: make deal with this
     NoSuchMethodException,
     InstantiationException,
     IllegalAccessException,

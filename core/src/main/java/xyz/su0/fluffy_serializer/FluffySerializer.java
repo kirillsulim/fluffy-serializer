@@ -17,6 +17,9 @@ import java.lang.Exception;
 import xyz.su0.fluffy_serializer.atomic_serializers.*;
 import xyz.su0.fluffy_serializer.annotations.*;
 
+/**
+ * Use instance of this class to serialize or deserialize objects
+ */
 public class FluffySerializer {
   private static List<String> ignoredNames;
   static {
@@ -24,6 +27,12 @@ public class FluffySerializer {
     ignoredNames.add("this$0");
   }
 
+  /**
+   * Pass object to serialize. If there is refernce to another objects, they
+   * will be serialized too.
+   * @param object Object to serialize
+   * @return String represents serialized object (or objects)
+   */
   public String serialize(Object object) {
     List<Object> objectsArray = new ArrayList<>();
     List<String> serializedObjects = new ArrayList<>();
@@ -101,6 +110,12 @@ public class FluffySerializer {
 
   }
 
+  /**
+   * Pass string with serialized data to deserialize to object (or objects).
+   * Function return Object type so you need to cast result to desired type.
+   * @param string String with serialized data
+   * @return Deserialized object
+   */
   public Object deserialize(String string) {
     String[] objectsStrings = string.replaceAll("^\\[\\{|\\}\\]$", "").split("\\},\\{");
 
@@ -117,7 +132,7 @@ public class FluffySerializer {
     return objectsArray.get(0);
   }
 
-  public Object deserializeObject(String string, AtomicHolder atomics) {
+  private Object deserializeObject(String string, AtomicHolder atomics) {
     String[] kvPairs = string.split(",");
 
     Map<String, String> kv = new HashMap<>();
@@ -169,7 +184,7 @@ public class FluffySerializer {
     return object;
   }
 
-  public void applyReferences(int index, String objectString, List<Object> objectsArray, AtomicHolder atomics) {
+  private void applyReferences(int index, String objectString, List<Object> objectsArray, AtomicHolder atomics) {
     String[] kvPairs = objectString.split(",");
 
     Map<String, String> kv = new HashMap<>();

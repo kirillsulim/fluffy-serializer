@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package xyz.su0.fluffy_serializer.atomic_serializers;
 
 import java.util.List;
@@ -9,26 +5,41 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+
+/**
+ * This atomic serializer process reference variables
+ */
 public class ReferenceSerializer implements IAtomicSerializer {
   private List<Object> elements;
 
+  /**
+   * When created reference serializer must share objectsArray with instance
+   * of FluffySerializer class so it can define link to right object.
+   * @param objectsArray objects list from FluffySerializer instance.
+   */
   public ReferenceSerializer(List<Object> objectsArray) {
     elements = objectsArray;
   }
 
-  public void setElements(List<Object> elements) {
-    this.elements = elements;
-  }
-
-  public String serialize(Object obj) {
-    int i = elements.indexOf(obj);
+  /**
+   * Get object index in objectsArray or add this object to it.
+   * @param object Object to serialize
+   * @return Serialized string
+   */
+  public String serialize(Object object) {
+    int i = elements.indexOf(object);
     if(i == -1) {
-      elements.add(obj);
+      elements.add(object);
       i = elements.size() - 1;
     }
     return String.format("\"&%d\"", i);
   }
 
+  /**
+   * Find object in partially deserialized objectsArray and return it.
+   * @param input String with "address" of object.
+   * @return Object
+   */
   public Object deserialize(String input) {
     Pattern pattern = Pattern.compile("\"&(\\d+)\"");
     Matcher matcher = pattern.matcher(input);
