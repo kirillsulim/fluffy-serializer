@@ -126,4 +126,20 @@ public class FluffySerializerTest {
     WithLinkToNotAnnotated withLink = new WithLinkToNotAnnotated();
     sz.serialize(withLink);
   }
+
+  @Test
+  public void shouldSerializeWithNullReferences() throws FluffyNotSerializableException, FluffySerializationException {
+    DemoClass noRef = new DemoClass();
+    String serialized = sz.serialize(noRef);
+    assertEquals("[{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&null\",\"data1\":\"\",\"data2\":0}]", serialized);
+  }
+
+  @Test
+  public void shouldDeserializeWithNullReferences() throws FluffyParseException, FluffySerializationException {
+    String data = "[{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&null\",\"data1\":\"\",\"data2\":0}]";
+    DemoClass result = (DemoClass)sz.deserialize(data);
+    assertNull(result.ref);
+    assertEquals("", result.data1);
+    assertEquals(0, result.data2);
+  }
 }

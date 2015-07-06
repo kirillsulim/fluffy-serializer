@@ -13,6 +13,9 @@ public class StringSerializer implements IAtomicSerializer {
    * @return Serialized string
    */
   public String serialize(Object s) {
+    if(s == null || ((String)s).isEmpty()) {
+      return "\"\"";
+    }
     StringBuilder sb = new StringBuilder(((String)s).replace("\"", "\\\""));
     sb.insert(0, '\"');
     sb.append('\"');
