@@ -23,6 +23,11 @@ class NotAnnotated {
   public int data;
 }
 
+@FluffySerializable
+class WithLinkToNotAnnotated {
+  public NotAnnotated link;
+}
+
 public class FluffySerializerTest {
   FluffySerializer sz;
 
@@ -111,9 +116,14 @@ public class FluffySerializerTest {
   }
 
   @Test(expected=FluffyNotSerializableException.class)
-  @Ignore
   public void shouldFailIfClassNotAnnotatedAsFluffySerializable() throws FluffyNotSerializableException, FluffySerializationException {
     NotAnnotated notAnnotated = new NotAnnotated();
     sz.serialize(notAnnotated);
+  }
+
+  @Test(expected=FluffyNotSerializableException.class)
+  public void shouldFailIfClassContainReferenceToNotAnnotated() throws FluffyNotSerializableException, FluffySerializationException {
+    WithLinkToNotAnnotated withLink = new WithLinkToNotAnnotated();
+    sz.serialize(withLink);
   }
 }

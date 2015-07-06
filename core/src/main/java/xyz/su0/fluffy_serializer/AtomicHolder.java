@@ -39,13 +39,16 @@ class AtomicHolder {
     if(!primitive && annotatedAsFluffy) {
       return ReferenceSerializer.class;
     }
-    return null;    
+    return null;
   }
 
-  public IAtomicSerializer getAtomicSerializerInstance(Class clazz) throws FluffySerializationException {
+  public IAtomicSerializer getAtomicSerializerInstance(Class clazz) throws FluffySerializationException, FluffyNotSerializableException {
     Class implClass = getAtomicSerializerClass(clazz);
 
-    if(implClass != ReferenceSerializer.class) {
+    if(implClass == ReferenceSerializer.class) {
+      return new ReferenceSerializer(objectsArray);
+    }
+    else if(implClass != null) {
       IAtomicSerializer sz = null;
       try {
         sz = (IAtomicSerializer)implClass.getConstructor().newInstance();
@@ -56,7 +59,7 @@ class AtomicHolder {
       return sz;
     }
     else {
-      return new ReferenceSerializer(objectsArray);
+      throw new FluffyNotSerializableException("Class is not marked as @FluffySerializable and has not custom serializer.");
     }
   }
 }

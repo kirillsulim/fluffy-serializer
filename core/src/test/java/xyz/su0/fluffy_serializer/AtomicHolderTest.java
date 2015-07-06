@@ -17,7 +17,7 @@ public class AtomicHolderTest {
   }
 
   @Test
-  public void shouldContainClasses() throws FluffySerializationException {
+  public void shouldContainClasses() throws FluffySerializationException, FluffyNotSerializableException {
     Class intSz = hd.getAtomicSerializerClass(int.class);
     Class integerSz = hd.getAtomicSerializerClass(Integer.class);
     Class stringSz = hd.getAtomicSerializerClass(String.class);
@@ -28,7 +28,7 @@ public class AtomicHolderTest {
   }
 
   @Test
-  public void shouldReturnSerializers() throws FluffySerializationException {
+  public void shouldReturnSerializers() throws FluffySerializationException, FluffyNotSerializableException {
     IAtomicSerializer intSz = hd.getAtomicSerializerInstance(int.class);
     IAtomicSerializer integerSz = hd.getAtomicSerializerInstance(Integer.class);
     IAtomicSerializer stringSz = hd.getAtomicSerializerInstance(String.class);

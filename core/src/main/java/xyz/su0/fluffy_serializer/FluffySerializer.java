@@ -121,6 +121,10 @@ public class FluffySerializer {
 
   private String serializeObject(Object object, AtomicHolder atomics) throws FluffySerializationException, FluffyNotSerializableException {
     Class clazz = object.getClass();
+    if(!clazz.isAnnotationPresent(FluffySerializable.class)) {
+      throw new FluffyNotSerializableException();
+    }
+
     String className = clazz.getName();
 
     List<String> kvPairs = new ArrayList<>();
@@ -140,6 +144,9 @@ public class FluffySerializer {
       IAtomicSerializer sz = null;
       try {
         sz = atomics.getAtomicSerializerInstance(fieldClass);
+      }
+      catch (FluffyNotSerializableException e) {
+        throw e;
       }
       catch (Exception e) {
         throw new FluffySerializationException(e);
