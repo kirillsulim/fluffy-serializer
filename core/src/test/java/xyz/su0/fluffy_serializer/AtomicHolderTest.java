@@ -1,6 +1,3 @@
-/*
- *
- */
 package xyz.su0.fluffy_serializer;
 
 import org.junit.*;

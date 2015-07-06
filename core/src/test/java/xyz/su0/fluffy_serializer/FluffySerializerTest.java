@@ -1,10 +1,9 @@
-/*
- *
- */
 package xyz.su0.fluffy_serializer;
 
 import org.junit.*;
 import static org.junit.Assert.*;
+
+import xyz.su0.fluffy_serializer.exceptions.*;
 
 
 class SimpleObject {
@@ -27,7 +26,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldSerializeSimpleObject() {
+  public void shouldSerializeSimpleObject() throws FluffySerializationException, FluffyNotSerializableException {
     SimpleObject o = new SimpleObject();
     o.data1 = 42;
     o.data2 = "Hello World!";
@@ -38,7 +37,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldDeserializeSimpleObject() {
+  public void shouldDeserializeSimpleObject() throws FluffyParseException {
     String data = "[{\"@class\":\"xyz.su0.fluffy_serializer.SimpleObject\",\"data1\":42,\"data2\":\"Hello World!\"}]";
 
     SimpleObject so = (SimpleObject) sz.deserialize(data);
@@ -48,7 +47,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldSerializeLinked() {
+  public void shouldSerializeLinked() throws FluffySerializationException, FluffyNotSerializableException {
     DemoClass o1 = new DemoClass();
     o1.data1 = "Hello";
     o1.data2 = 42;
@@ -78,7 +77,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldDeserializeLinked() {
+  public void shouldDeserializeLinked() throws FluffyParseException {
     String data = "["
       + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&1\",\"data1\":\"Hello\",\"data2\":42},"
       + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&2\",\"data1\":\"World\",\"data2\":123},"
@@ -97,5 +96,11 @@ public class FluffySerializerTest {
     assertEquals("Today", third.data1);
     assertEquals(2015, third.data2);
     assertEquals(startPoint, third.ref);
+  }
+
+  @Test(expected=FluffyParseException.class)
+  public void shoudFailWhenDataIsNotJsonArray() throws FluffyParseException {
+    String data = "87123nkjnasd7as7dh34jh234";
+    sz.deserialize(data);
   }
 }

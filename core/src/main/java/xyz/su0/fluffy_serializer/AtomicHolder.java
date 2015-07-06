@@ -1,7 +1,3 @@
-/*
- *
- */
-
 package xyz.su0.fluffy_serializer;
 
 import java.lang.reflect.*;
