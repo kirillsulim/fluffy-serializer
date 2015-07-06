@@ -1,6 +1,3 @@
-/*
- *
- */
 package xyz.su0.fluffy_serializer;
 
 import java.lang.reflect.*;
@@ -10,12 +7,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-import java.lang.Exception;
-
-
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import xyz.su0.fluffy_serializer.atomic_serializers.*;
 import xyz.su0.fluffy_serializer.annotations.*;
+import xyz.su0.fluffy_serializer.exceptions.*;
 
 /**
  * Use instance of this class to serialize or deserialize objects
@@ -32,8 +29,10 @@ public class FluffySerializer {
    * will be serialized too.
    * @param object Object to serialize
    * @return String represents serialized object (or objects)
+   * @throws FluffyNotSerializableException if objects is not marked as serializable by fluffy-serializer
+   * @throws FluffySerializationException if error occured
    */
-  public String serialize(Object object) {
+  public String serialize(Object object) throws FluffyNotSerializableException, FluffySerializationException {
     List<Object> objectsArray = new ArrayList<>();
     List<String> serializedObjects = new ArrayList<>();
     AtomicHolder atomics = new AtomicHolder(objectsArray);
@@ -55,8 +54,77 @@ public class FluffySerializer {
     return result.toString();
   }
 
-  private String serializeObject(Object object, AtomicHolder atomics) {
+  /**
+   * Pass string with serialized data to deserialize to object (or objects).
+   * Function return Object type so you need to cast result to desired type.
+   * @param string String with serialized data
+   * @return Deserialized object
+   * @throws FluffyParseException if string is inconsistent data
+   */
+  public Object deserialize(String string) throws FluffyParseException {
+    if(!Pattern.matches("\\[(\\{.+\\})(,\\{.+\\})*\\]", string)) {
+      throw new FluffyParseException("Inconsistent data");
+    }
+
+    List<Object> objectsArray = new ArrayList<>();
+    AtomicHolder atomics = new AtomicHolder(objectsArray);
+
+    List<ObjectData> objectsData = createObjectDataList(string);
+
+    for (ObjectData data : objectsData) {
+      objectsArray.add(deserializeObject(data, atomics));
+    }
+    for (ObjectData data : objectsData) {
+      applyReferences(data, objectsArray, atomics);
+    }
+
+    return objectsArray.get(0);
+  }
+
+  private String trimQuotes(String string) {
+    String result = string.replaceAll("^\"|\"$", "");
+    return result;
+  }
+
+  private List<ObjectData> createObjectDataList(String string)  throws FluffyParseException {
+    List<ObjectData> result = new ArrayList<>();
+
+    String[] objectsStrings = string.replaceAll("^\\[\\{|\\}\\]$", "").split("\\},\\{");
+
+    int currentIndex = 0;
+
+    for(String objectString : objectsStrings) {
+
+      ObjectData data = new ObjectData();
+
+      String[] kvPairs = objectString.split(",");
+      for(String pair : kvPairs) {
+        String[] t = pair.split(":");
+        if(t.length != 2) {
+          throw new FluffyParseException();
+        }
+        if(trimQuotes(t[0]).equals("@class")) {
+          data.className = trimQuotes(t[1]);
+        }
+        else if(trimQuotes(t[1]).startsWith("&")) {
+          data.refFields.put(trimQuotes(t[0]), t[1]);
+        }
+        else {
+          data.fields.put(trimQuotes(t[0]), t[1]);
+        }
+      }
+      data.index = currentIndex++;
+      result.add(data);
+    }
+    return result;
+  }
+
+  private String serializeObject(Object object, AtomicHolder atomics) throws FluffySerializationException, FluffyNotSerializableException {
     Class clazz = object.getClass();
+    if(!clazz.isAnnotationPresent(FluffySerializable.class)) {
+      throw new FluffyNotSerializableException();
+    }
+
     String className = clazz.getName();
 
     List<String> kvPairs = new ArrayList<>();
@@ -71,17 +139,17 @@ public class FluffySerializer {
         continue;
       }
 
-      System.out.println(name);
-
       Class fieldClass = f.getType();
-      System.out.println(fieldClass.getName());
 
       IAtomicSerializer sz = null;
       try {
         sz = atomics.getAtomicSerializerInstance(fieldClass);
       }
+      catch (FluffyNotSerializableException e) {
+        throw e;
+      }
       catch (Exception e) {
-        // TODO: fix after exception added
+        throw new FluffySerializationException(e);
       }
 
       String value = "";
@@ -90,7 +158,7 @@ public class FluffySerializer {
         value = sz.serialize(objValue);
       }
       catch (IllegalAccessException e) {
-        // TODO: fix after exception added
+        throw new FluffySerializationException(e);
       }
 
       StringBuilder kv = new StringBuilder();
@@ -110,41 +178,9 @@ public class FluffySerializer {
 
   }
 
-  /**
-   * Pass string with serialized data to deserialize to object (or objects).
-   * Function return Object type so you need to cast result to desired type.
-   * @param string String with serialized data
-   * @return Deserialized object
-   */
-  public Object deserialize(String string) {
-    String[] objectsStrings = string.replaceAll("^\\[\\{|\\}\\]$", "").split("\\},\\{");
+  private Object deserializeObject(ObjectData data, AtomicHolder atomics) throws FluffyParseException {
+    String className = data.className;
 
-    List<Object> objectsArray = new ArrayList<>();
-    AtomicHolder atomics = new AtomicHolder(objectsArray);
-
-    for (String objString : objectsStrings) {
-      objectsArray.add(deserializeObject(objString, atomics));
-    }
-    for (int i = 0; i < objectsArray.size(); ++i) {
-      applyReferences(i, objectsStrings[i], objectsArray, atomics);
-    }
-
-    return objectsArray.get(0);
-  }
-
-  private Object deserializeObject(String string, AtomicHolder atomics) {
-    String[] kvPairs = string.split(",");
-
-    Map<String, String> kv = new HashMap<>();
-    for(String pair : kvPairs) {
-      System.out.println(pair);
-      String[] t = pair.split(":");
-      kv.put(t[0].replaceAll("\"", ""), t[1].replaceAll("\"", ""));
-    }
-
-    String className = kv.get("@class");
-    kv.remove("@class");
-    System.out.println(className);
     Object object = null;
     Class objectClass = null;
     try {
@@ -152,77 +188,47 @@ public class FluffySerializer {
       object = objectClass.newInstance();
     }
     catch(Exception e) {
-      // TODO: add after exceptions
-      System.out.println(e.toString());
+      throw new FluffyParseException(e);
     }
 
-    for(Map.Entry<String, String> entry : kv.entrySet()) {
-      if(entry.getValue().startsWith("&")) {
-        continue;
-      }
-
-      Field currentField = null;
+    for(Map.Entry<String, String> entry : data.fields.entrySet()) {
       try {
-        currentField = objectClass.getField(entry.getKey());
-      }
-      catch(Exception e) {
-        // TODO: fix
-        System.out.println(e.toString());
-      }
-      currentField.setAccessible(true);
+        Field currentField = objectClass.getField(entry.getKey());
+        currentField.setAccessible(true);
 
-      IAtomicSerializer sz = atomics.getAtomicSerializerInstance(currentField.getType());
-      try {
+        IAtomicSerializer sz = atomics.getAtomicSerializerInstance(currentField.getType());
         currentField.set(object, sz.deserialize(entry.getValue()));
       }
       catch(Exception e) {
-        // TODO: fix
-        System.out.println(e.toString());
+        throw new FluffyParseException(e);
       }
     }
 
     return object;
   }
 
-  private void applyReferences(int index, String objectString, List<Object> objectsArray, AtomicHolder atomics) {
-    String[] kvPairs = objectString.split(",");
-
-    Map<String, String> kv = new HashMap<>();
-    for(String pair : kvPairs) {
-      System.out.println(pair);
-      String[] t = pair.split(":");
-      kv.put(t[0].replaceAll("\"", ""), t[1]);
-    }
-    String className = kv.get("@class");
-    kv.remove("@class");
-
-    Object object = objectsArray.get(index);
+  private void applyReferences(ObjectData data, List<Object> objectsArray, AtomicHolder atomics) throws FluffyParseException {
+    Object object = objectsArray.get(data.index);
     Class objectClass = object.getClass();
 
-    for(Map.Entry<String, String> entry : kv.entrySet()) {
-      if(!entry.getValue().startsWith("\"&")) {
-        continue;
-      }
-
-      Field currentField = null;
+    for(Map.Entry<String, String> entry : data.refFields.entrySet()) {
       try {
-        currentField = objectClass.getField(entry.getKey());
-      }
-      catch(Exception e) {
-        // TODO: fix
-        System.out.println(e.toString());
-      }
-      currentField.setAccessible(true);
+        Field currentField = objectClass.getField(entry.getKey());
+        currentField.setAccessible(true);
 
-      IAtomicSerializer sz = atomics.getAtomicSerializerInstance(currentField.getType());
-      try {
+        IAtomicSerializer sz = atomics.getAtomicSerializerInstance(currentField.getType());
         currentField.set(object, sz.deserialize(entry.getValue()));
-        System.out.println("Stted " + entry.getValue() + " = " + currentField.get(object));
       }
       catch(Exception e) {
-        // TODO: fix
-        System.out.println(e.toString());
+        throw new FluffyParseException(e);
       }
     }
   }
+}
+
+class ObjectData {
+  public int index;
+  public String className;
+  public Map<String, String> fields = new HashMap<>();
+  public Map<String, String> refFields = new HashMap<>();
 }

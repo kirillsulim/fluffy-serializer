@@ -1,21 +1,31 @@
-/*
- *
- */
 package xyz.su0.fluffy_serializer;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import xyz.su0.fluffy_serializer.exceptions.*;
+import xyz.su0.fluffy_serializer.annotations.*;
 
+@FluffySerializable
 class SimpleObject {
   public int data1;
   public String data2;
 }
 
+@FluffySerializable
 class DemoClass {
   public DemoClass ref;
   public String data1;
   public int data2;
+}
+
+class NotAnnotated {
+  public int data;
+}
+
+@FluffySerializable
+class WithLinkToNotAnnotated {
+  public NotAnnotated link;
 }
 
 public class FluffySerializerTest {
@@ -27,7 +37,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldSerializeSimpleObject() {
+  public void shouldSerializeSimpleObject() throws FluffySerializationException, FluffyNotSerializableException {
     SimpleObject o = new SimpleObject();
     o.data1 = 42;
     o.data2 = "Hello World!";
@@ -38,7 +48,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldDeserializeSimpleObject() {
+  public void shouldDeserializeSimpleObject() throws FluffyParseException {
     String data = "[{\"@class\":\"xyz.su0.fluffy_serializer.SimpleObject\",\"data1\":42,\"data2\":\"Hello World!\"}]";
 
     SimpleObject so = (SimpleObject) sz.deserialize(data);
@@ -48,7 +58,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldSerializeLinked() {
+  public void shouldSerializeLinked() throws FluffySerializationException, FluffyNotSerializableException {
     DemoClass o1 = new DemoClass();
     o1.data1 = "Hello";
     o1.data2 = 42;
@@ -78,7 +88,7 @@ public class FluffySerializerTest {
   }
 
   @Test
-  public void shouldDeserializeLinked() {
+  public void shouldDeserializeLinked() throws FluffyParseException {
     String data = "["
       + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&1\",\"data1\":\"Hello\",\"data2\":42},"
       + "{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&2\",\"data1\":\"World\",\"data2\":123},"
@@ -97,5 +107,39 @@ public class FluffySerializerTest {
     assertEquals("Today", third.data1);
     assertEquals(2015, third.data2);
     assertEquals(startPoint, third.ref);
+  }
+
+  @Test(expected=FluffyParseException.class)
+  public void shouldFailWhenDataIsNotJsonArray() throws FluffyParseException {
+    String data = "87123nkjnasd7as7dh34jh234";
+    sz.deserialize(data);
+  }
+
+  @Test(expected=FluffyNotSerializableException.class)
+  public void shouldFailIfClassNotAnnotatedAsFluffySerializable() throws FluffyNotSerializableException, FluffySerializationException {
+    NotAnnotated notAnnotated = new NotAnnotated();
+    sz.serialize(notAnnotated);
+  }
+
+  @Test(expected=FluffyNotSerializableException.class)
+  public void shouldFailIfClassContainReferenceToNotAnnotated() throws FluffyNotSerializableException, FluffySerializationException {
+    WithLinkToNotAnnotated withLink = new WithLinkToNotAnnotated();
+    sz.serialize(withLink);
+  }
+
+  @Test
+  public void shouldSerializeWithNullReferences() throws FluffyNotSerializableException, FluffySerializationException {
+    DemoClass noRef = new DemoClass();
+    String serialized = sz.serialize(noRef);
+    assertEquals("[{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&null\",\"data1\":\"\",\"data2\":0}]", serialized);
+  }
+
+  @Test
+  public void shouldDeserializeWithNullReferences() throws FluffyParseException, FluffySerializationException {
+    String data = "[{\"@class\":\"xyz.su0.fluffy_serializer.DemoClass\",\"ref\":\"&null\",\"data1\":\"\",\"data2\":0}]";
+    DemoClass result = (DemoClass)sz.deserialize(data);
+    assertNull(result.ref);
+    assertEquals("", result.data1);
+    assertEquals(0, result.data2);
   }
 }

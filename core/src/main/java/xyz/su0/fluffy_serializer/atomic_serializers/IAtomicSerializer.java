@@ -1,5 +1,7 @@
 package xyz.su0.fluffy_serializer.atomic_serializers;
 
+import xyz.su0.fluffy_serializer.exceptions.*;
+
 /**
  * Atomic serializer is base block of fluffy serializer. Atomic serializer
  * serialize and deserialize data of specific type. If you want to customize
@@ -13,13 +15,16 @@ public interface IAtomicSerializer {
    * Serialize object to string
    * @param object Object to seriazlize
    * @return String with serialized data
+   * @throws FluffyNotSerializableException if object cannot be serialized
+   * @throws FluffySerializationException if error occured during serialization
    */
-  public abstract String serialize(Object object);
+  public abstract String serialize(Object object) throws FluffyNotSerializableException, FluffySerializationException;
 
   /**
    * Deserialize string to object
    * @param string String with serialized data
    * @return deserialized object
+   * @throws FluffyParseException if string is inconsistent serialized data
    */
-  public abstract Object deserialize(String string);
+  public abstract Object deserialize(String string) throws FluffyParseException;
 }

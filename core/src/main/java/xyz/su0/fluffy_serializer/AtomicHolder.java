@@ -1,7 +1,3 @@
-/*
- *
- */
-
 package xyz.su0.fluffy_serializer;
 
 import java.lang.reflect.*;
@@ -14,6 +10,7 @@ import org.apache.commons.lang3.ClassUtils;
 
 import xyz.su0.fluffy_serializer.atomic_serializers.*;
 import xyz.su0.fluffy_serializer.annotations.*;
+import xyz.su0.fluffy_serializer.exceptions.*;
 
 
 class AtomicHolder {
@@ -32,40 +29,37 @@ class AtomicHolder {
   }
 
   public Class getAtomicSerializerClass(Class clazz) {
+    boolean primitive = ClassUtils.isPrimitiveOrWrapper(clazz);
+    boolean annotatedAsFluffy = clazz.isAnnotationPresent(FluffySerializable.class);
     Class atomicSzClass = atomics.get(clazz);
+
     if(atomicSzClass != null) {
       return atomicSzClass;
     }
-    if(!ClassUtils.isPrimitiveOrWrapper(clazz)) {
+    if(!primitive && annotatedAsFluffy) {
       return ReferenceSerializer.class;
     }
-    else {
-      return null;
-    }
+    return null;
   }
 
-  public IAtomicSerializer getAtomicSerializerInstance(Class clazz)
-    /*throws
-    TODO: make deal with this
-    NoSuchMethodException,
-    InstantiationException,
-    IllegalAccessException,
-    InvocationTargetException*/
-  {
+  public IAtomicSerializer getAtomicSerializerInstance(Class clazz) throws FluffySerializationException, FluffyNotSerializableException {
     Class implClass = getAtomicSerializerClass(clazz);
 
-    if(implClass != ReferenceSerializer.class) {
+    if(implClass == ReferenceSerializer.class) {
+      return new ReferenceSerializer(objectsArray);
+    }
+    else if(implClass != null) {
       IAtomicSerializer sz = null;
       try {
-
         sz = (IAtomicSerializer)implClass.getConstructor().newInstance();
       }
       catch (Exception e) {
+        throw new FluffySerializationException(e);
       }
       return sz;
     }
     else {
-      return new ReferenceSerializer(objectsArray);
+      throw new FluffyNotSerializableException("Class is not marked as @FluffySerializable and has not custom serializer.");
     }
   }
 }

@@ -12,6 +12,8 @@ import java.util.regex.Matcher;
 public class ReferenceSerializer implements IAtomicSerializer {
   private List<Object> elements;
 
+  private final static String nullValue = "\"&null\"";
+
   /**
    * When created reference serializer must share objectsArray with instance
    * of FluffySerializer class so it can define link to right object.
@@ -27,6 +29,9 @@ public class ReferenceSerializer implements IAtomicSerializer {
    * @return Serialized string
    */
   public String serialize(Object object) {
+    if(object == null) {
+      return nullValue;
+    }
     int i = elements.indexOf(object);
     if(i == -1) {
       elements.add(object);
@@ -41,6 +46,10 @@ public class ReferenceSerializer implements IAtomicSerializer {
    * @return Object
    */
   public Object deserialize(String input) {
+    if(input.equals(nullValue)) {
+      return null;
+    }
+
     Pattern pattern = Pattern.compile("\"&(\\d+)\"");
     Matcher matcher = pattern.matcher(input);
 
