@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 import xyz.su0.fluffy_serializer.atomic_serializers.*;
 import xyz.su0.fluffy_serializer.annotations.*;
@@ -131,7 +132,7 @@ public class FluffySerializer {
 
     kvPairs.add("\"@class\":\"" + className + "\"");
 
-    Field[] fields = clazz.getDeclaredFields();
+    Field[] fields = FieldUtils.getAllFields(clazz);
     for(Field f : fields) {
       f.setAccessible(true);
       String name = f.getName();
@@ -193,7 +194,8 @@ public class FluffySerializer {
 
     for(Map.Entry<String, String> entry : data.fields.entrySet()) {
       try {
-        Field currentField = objectClass.getField(entry.getKey());
+        boolean forceAccess = true;
+        Field currentField = FieldUtils.getField(objectClass, entry.getKey(), forceAccess);
         currentField.setAccessible(true);
 
         IAtomicSerializer sz = atomics.getAtomicSerializerInstance(currentField.getType());
@@ -213,7 +215,8 @@ public class FluffySerializer {
 
     for(Map.Entry<String, String> entry : data.refFields.entrySet()) {
       try {
-        Field currentField = objectClass.getField(entry.getKey());
+        boolean forceAccess = true;
+        Field currentField = FieldUtils.getField(objectClass, entry.getKey(), forceAccess);
         currentField.setAccessible(true);
 
         IAtomicSerializer sz = atomics.getAtomicSerializerInstance(currentField.getType());

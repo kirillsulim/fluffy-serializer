@@ -28,6 +28,24 @@ class WithLinkToNotAnnotated {
   public NotAnnotated link;
 }
 
+@FluffySerializable
+class Base {
+  private String data1;
+
+  public String getData1() {
+    return data1;
+  }
+
+  public void setData1(String s) {
+    data1 = s;
+  }
+}
+
+@FluffySerializable
+class Extend extends Base {
+  public String data2;
+}
+
 public class FluffySerializerTest {
   FluffySerializer sz;
 
@@ -141,5 +159,22 @@ public class FluffySerializerTest {
     assertNull(result.ref);
     assertEquals("", result.data1);
     assertEquals(0, result.data2);
+  }
+
+  @Test
+  public void shouldSerializeExtendedClass() throws FluffyNotSerializableException, FluffySerializationException {
+    Extend ex = new Extend();
+    ex.setData1("From base");
+    ex.data2 = "From child";
+
+    assertEquals("[{\"@class\":\"xyz.su0.fluffy_serializer.Extend\",\"data2\":\"From child\",\"data1\":\"From base\"}]", sz.serialize(ex));
+  }
+
+  @Test
+  public void shouldDeserializeExtendedClass() throws FluffyParseException, FluffySerializationException {
+    String data = "[{\"@class\":\"xyz.su0.fluffy_serializer.Extend\",\"data2\":\"From child\",\"data1\":\"From base\"}]";
+    Extend ex = (Extend)sz.deserialize(data);
+    assertEquals("From base", ex.getData1());
+    assertEquals("From child", ex.data2);
   }
 }
