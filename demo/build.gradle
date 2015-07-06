@@ -1,0 +1,7 @@
+apply plugin: 'application'
+
+dependencies {
+  compile project(':core')
+}
+
+mainClassName = "xyz.su0.fluffy_serializer.RunDemo"
