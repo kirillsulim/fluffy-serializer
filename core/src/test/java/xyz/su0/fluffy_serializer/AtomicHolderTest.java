@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 
 import xyz.su0.fluffy_serializer.atomic_serializers.*;
+import xyz.su0.fluffy_serializer.exceptions.*;
 
 
 public class AtomicHolderTest {
@@ -16,7 +17,7 @@ public class AtomicHolderTest {
   }
 
   @Test
-  public void shouldContainClasses() {
+  public void shouldContainClasses() throws FluffySerializationException {
     Class intSz = hd.getAtomicSerializerClass(int.class);
     Class integerSz = hd.getAtomicSerializerClass(Integer.class);
     Class stringSz = hd.getAtomicSerializerClass(String.class);
@@ -27,7 +28,7 @@ public class AtomicHolderTest {
   }
 
   @Test
-  public void shouldReturnSerializers() {
+  public void shouldReturnSerializers() throws FluffySerializationException {
     IAtomicSerializer intSz = hd.getAtomicSerializerInstance(int.class);
     IAtomicSerializer integerSz = hd.getAtomicSerializerInstance(Integer.class);
     IAtomicSerializer stringSz = hd.getAtomicSerializerInstance(String.class);

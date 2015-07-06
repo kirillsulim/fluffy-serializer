@@ -16,6 +16,7 @@ public interface IAtomicSerializer {
    * @param object Object to seriazlize
    * @return String with serialized data
    * @throws FluffyNotSerializableException if object cannot be serialized
+   * @throws FluffySerializationException if error occured during serialization
    */
   public abstract String serialize(Object object) throws FluffyNotSerializableException, FluffySerializationException;
 

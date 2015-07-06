@@ -4,17 +4,23 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import xyz.su0.fluffy_serializer.exceptions.*;
+import xyz.su0.fluffy_serializer.annotations.*;
 
-
+@FluffySerializable
 class SimpleObject {
   public int data1;
   public String data2;
 }
 
+@FluffySerializable
 class DemoClass {
   public DemoClass ref;
   public String data1;
   public int data2;
+}
+
+class NotAnnotated {
+  public int data;
 }
 
 public class FluffySerializerTest {
@@ -99,8 +105,15 @@ public class FluffySerializerTest {
   }
 
   @Test(expected=FluffyParseException.class)
-  public void shoudFailWhenDataIsNotJsonArray() throws FluffyParseException {
+  public void shouldFailWhenDataIsNotJsonArray() throws FluffyParseException {
     String data = "87123nkjnasd7as7dh34jh234";
     sz.deserialize(data);
+  }
+
+  @Test(expected=FluffyNotSerializableException.class)
+  @Ignore
+  public void shouldFailIfClassNotAnnotatedAsFluffySerializable() throws FluffyNotSerializableException, FluffySerializationException {
+    NotAnnotated notAnnotated = new NotAnnotated();
+    sz.serialize(notAnnotated);
   }
 }
